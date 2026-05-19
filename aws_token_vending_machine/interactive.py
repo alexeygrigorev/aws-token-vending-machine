@@ -92,23 +92,38 @@ def pick_remote_folder(ssh: paramiko.SSHClient, host: str) -> str:
     sftp = ssh.open_sftp()
     try:
         current = sftp.normalize(".")
+        show_hidden = False
         while True:
             entries = sftp.listdir_attr(current)
-            dirs = sorted(e.filename for e in entries if stat.S_ISDIR(e.st_mode))
+            all_dirs = sorted(e.filename for e in entries if stat.S_ISDIR(e.st_mode))
+            visible = [d for d in all_dirs if not d.startswith(".")]
+            hidden = [d for d in all_dirs if d.startswith(".")]
+
+            shown = all_dirs if show_hidden else visible
             use_here = f"[write .env here: {current}/.env]"
-            choices = [use_here, "../", *[f"{d}/" for d in dirs]]
+            choices: list = [use_here, "../", *[f"{d}/" for d in shown]]
+
+            reveal_label = None
+            if hidden and not show_hidden:
+                noun = "directory" if len(hidden) == 1 else "directories"
+                reveal_label = f"[show {len(hidden)} hidden {noun}]"
+                choices.append(reveal_label)
+
             choice = _abort_on_cancel(
-                questionary.select(
-                    f"{host}:{current}",
-                    choices=choices,
-                ).ask()
+                questionary.select(f"{host}:{current}", choices=choices).ask()
             )
+
+            if reveal_label is not None and choice == reveal_label:
+                show_hidden = True
+                continue
             if choice == use_here:
                 return current
             if choice == "../":
                 current = posixpath.dirname(current.rstrip("/")) or "/"
+                show_hidden = False
             else:
                 current = posixpath.join(current, choice.rstrip("/"))
+                show_hidden = False
     finally:
         sftp.close()
 
