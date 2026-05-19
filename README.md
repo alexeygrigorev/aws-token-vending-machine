@@ -88,13 +88,26 @@ The returned session credentials then satisfy MFA for the rest of their lifetime
 
 ### Push credentials to a remote host over SSH
 
+Interactive mode (recommended) — pick an SSH host and browse the remote filesystem:
+
+```sh
+uv run aws-token-vending-machine creds -i
+```
+
+You'll be prompted to:
+
+1. Pick a host from `~/.ssh/config` (or type a custom one).
+2. Navigate the remote filesystem with arrow keys. Each menu shows the current directory's subfolders plus `../` (up) and `[write .env here: <path>/.env]` (commit). The same SSH connection is reused for navigation and writing, so it's fast.
+
+The file is always named `.env` in the folder you pick. Existing AWS keys are updated; unrelated keys and comments are preserved.
+
+Non-interactive (for scripts and CI):
+
 ```sh
 uv run aws-token-vending-machine creds \
   --remote-host <ssh-host> \
   --remote-path '~/tmp/lambda-deploy/.env'
 ```
-
-The remote file is created if missing; existing AWS keys are updated; unrelated keys and comments are preserved.
 
 ### Create or verify the sandbox account
 
@@ -127,7 +140,8 @@ aws-token-vending-machine creds
   --region               default: eu-west-1
   --duration-seconds     default: 7200
   --output               default: experiments-env
-  --remote-host          optional SSH host
+  -i / --interactive     pick SSH host and remote folder via prompts
+  --remote-host          optional SSH host (skips interactive picker)
   --remote-path          optional remote env path
   --mfa-serial           optional, main target only
   --mfa-code             required when --mfa-serial is set
@@ -142,6 +156,7 @@ aws_token_vending_machine/
   config.py         load AWS_EXPERIMENTS_* from .env
   credentials.py    AssumeRole (sandbox) / GetSessionToken (main)
   env_file.py       merge KEY=value into a local env file
+  interactive.py    SSH-host + remote-folder picker (paramiko + questionary)
   remote.py         merge KEY=value into a remote env file over SSH
   setup.py          AWS Organizations account + admin user
 ```

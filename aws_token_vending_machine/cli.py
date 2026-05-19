@@ -38,6 +38,12 @@ def build_parser() -> argparse.ArgumentParser:
     creds.add_argument("--output", default=DEFAULT_OUTPUT_FILE)
     creds.add_argument("--remote-host", default=None)
     creds.add_argument("--remote-path", default=None)
+    creds.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Interactively pick an SSH host (from ~/.ssh/config) and browse remote directories to drop a .env file. Ignored if --remote-host is provided.",
+    )
     creds.add_argument("--mfa-serial", default=env("AWS_EXPERIMENTS_MFA_SERIAL", None) or None)
     creds.add_argument("--mfa-code", default=None)
 
@@ -69,17 +75,31 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run_creds(args: argparse.Namespace) -> int:
+    ssh_client = None
+    remote_host = args.remote_host
+    remote_path = args.remote_path
+
+    if args.interactive and not remote_host:
+        from aws_token_vending_machine.interactive import prompt_remote_target
+
+        ssh_client, remote_host, remote_path = prompt_remote_target()
+
     request = CredentialsRequest(
         target=args.target,
         region=args.region,
         duration_seconds=args.duration_seconds,
         output=pathlib.Path(args.output),
-        remote_host=args.remote_host,
-        remote_path=args.remote_path,
+        remote_host=remote_host,
+        remote_path=remote_path,
         mfa_serial=args.mfa_serial,
         mfa_code=args.mfa_code,
     )
-    expiration = write_credentials(request)
+    try:
+        expiration = write_credentials(request, ssh_client=ssh_client)
+    finally:
+        if ssh_client is not None:
+            ssh_client.close()
+
     print(f"Target:  {request.target}")
     print(f"Wrote:   {request.output}")
     if request.remote_host:

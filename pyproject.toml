@@ -7,6 +7,8 @@ requires-python = ">=3.13"
 license = { file = "LICENSE" }
 dependencies = [
     "boto3>=1.43.3",
+    "paramiko>=5.0.0",
+    "questionary>=2.1.1",
 ]
 
 [project.scripts]

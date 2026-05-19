@@ -1,9 +1,11 @@
-"""Merge env updates into a remote file over SSH by piping JSON into python3 -c."""
+"""Merge env updates into a remote file over SSH (subprocess or paramiko SFTP)."""
 
 
 import json
 import shlex
 import subprocess
+
+from aws_token_vending_machine.env_file import update_env_lines
 
 
 REMOTE_UPDATE_SCRIPT = r"""
@@ -69,3 +71,23 @@ def verify_remote(remote_host: str, remote_path: str) -> None:
     payload = json.dumps({"path": remote_path})
     command = f"python3 -c {shlex.quote(REMOTE_VERIFY_SCRIPT)}"
     subprocess.run(["ssh", remote_host, command], input=payload, text=True, check=True)
+
+
+def write_remote_env_via_sftp(ssh_client, remote_path: str, updates: dict[str, str]) -> None:
+    """Merge updates into remote_path using an already-open paramiko SSHClient."""
+    sftp = ssh_client.open_sftp()
+    try:
+        try:
+            with sftp.file(remote_path, "r") as handle:
+                existing = handle.read().decode("utf-8").splitlines()
+        except FileNotFoundError:
+            existing = []
+        merged = update_env_lines(existing, updates)
+        with sftp.file(remote_path, "w") as handle:
+            handle.write("\n".join(merged) + "\n")
+        try:
+            sftp.chmod(remote_path, 0o600)
+        except OSError:
+            pass
+    finally:
+        sftp.close()

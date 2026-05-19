@@ -9,7 +9,11 @@ import boto3
 
 from aws_token_vending_machine.config import env, require_env
 from aws_token_vending_machine.env_file import update_env_file
-from aws_token_vending_machine.remote import update_remote_env_file, verify_remote
+from aws_token_vending_machine.remote import (
+    update_remote_env_file,
+    verify_remote,
+    write_remote_env_via_sftp,
+)
 
 
 Target = Literal["sandbox", "main"]
@@ -96,14 +100,17 @@ def fetch_credentials(request: CredentialsRequest) -> tuple[dict[str, str], str]
     raise SystemExit(f"Unknown target: {request.target}")
 
 
-def write_credentials(request: CredentialsRequest) -> str:
+def write_credentials(request: CredentialsRequest, ssh_client=None) -> str:
     updates, expiration = fetch_credentials(request)
     update_env_file(request.output, updates)
 
     if request.remote_host:
         if not request.remote_path:
             raise SystemExit("--remote-path is required when --remote-host is set")
-        update_remote_env_file(request.remote_host, request.remote_path, updates)
-        verify_remote(request.remote_host, request.remote_path)
+        if ssh_client is not None:
+            write_remote_env_via_sftp(ssh_client, request.remote_path, updates)
+        else:
+            update_remote_env_file(request.remote_host, request.remote_path, updates)
+            verify_remote(request.remote_host, request.remote_path)
 
     return expiration
