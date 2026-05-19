@@ -88,6 +88,21 @@ def open_ssh(host: str) -> paramiko.SSHClient:
     return client
 
 
+def _prompt_new_dir_name() -> str | None:
+    answer = questionary.text(
+        "New directory name:",
+        validate=lambda v: (
+            True
+            if v.strip() and "/" not in v and v.strip() not in {".", ".."}
+            else "Enter a single non-empty name without '/'"
+        ),
+    ).ask()
+    if answer is None:
+        return None
+    name = answer.strip()
+    return name or None
+
+
 def pick_remote_folder(ssh: paramiko.SSHClient, host: str) -> str:
     sftp = ssh.open_sftp()
     try:
@@ -101,7 +116,8 @@ def pick_remote_folder(ssh: paramiko.SSHClient, host: str) -> str:
 
             shown = all_dirs if show_hidden else visible
             use_here = f"[write .env here: {current}/.env]"
-            choices: list = [use_here, "../", *[f"{d}/" for d in shown]]
+            new_dir_label = "[+ new directory...]"
+            choices: list = [use_here, new_dir_label, "../", *[f"{d}/" for d in shown]]
 
             reveal_label = None
             if hidden and not show_hidden:
@@ -115,6 +131,19 @@ def pick_remote_folder(ssh: paramiko.SSHClient, host: str) -> str:
 
             if reveal_label is not None and choice == reveal_label:
                 show_hidden = True
+                continue
+            if choice == new_dir_label:
+                new_name = _prompt_new_dir_name()
+                if new_name is None:
+                    continue
+                new_path = posixpath.join(current, new_name)
+                try:
+                    sftp.mkdir(new_path)
+                except OSError as exc:
+                    print(f"Could not create {new_path}: {exc}")
+                    continue
+                current = new_path
+                show_hidden = False
                 continue
             if choice == use_here:
                 return current
