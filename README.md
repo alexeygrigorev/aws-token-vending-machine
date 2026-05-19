@@ -40,6 +40,17 @@ $EDITOR .env
 
 ## Use
 
+A `Makefile` wraps the common invocations:
+
+```sh
+make creds          # interactive: pick remote host + folder, drop .env there
+make creds-local    # local env file only, no remote prompt
+make creds-main     # GetSessionToken for the management account
+make setup-sandbox  # create or verify the AWS Organizations sandbox account
+```
+
+Or call the CLI directly:
+
 ### Mint sandbox credentials (default)
 
 ```sh
