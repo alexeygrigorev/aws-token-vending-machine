@@ -142,9 +142,7 @@ def pick_remote_folder(ssh: paramiko.SSHClient, host: str) -> str:
                 except OSError as exc:
                     print(f"Could not create {new_path}: {exc}")
                     continue
-                current = new_path
-                show_hidden = False
-                continue
+                return new_path
             if choice == use_here:
                 return current
             if choice == "../":
