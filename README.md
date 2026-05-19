@@ -88,10 +88,10 @@ The returned session credentials then satisfy MFA for the rest of their lifetime
 
 ### Push credentials to a remote host over SSH
 
-Interactive mode (recommended) — pick an SSH host and browse the remote filesystem:
+By default, `creds` prompts you interactively for where to push the env file:
 
 ```sh
-uv run aws-token-vending-machine creds -i
+uv run aws-token-vending-machine creds
 ```
 
 You'll be prompted to:
@@ -101,7 +101,13 @@ You'll be prompted to:
 
 The file is always named `.env` in the folder you pick. Existing AWS keys are updated; unrelated keys and comments are preserved.
 
-Non-interactive (for scripts and CI):
+To skip the prompt and only write the local env file:
+
+```sh
+uv run aws-token-vending-machine creds --no-remote
+```
+
+Non-interactive remote (for scripts and CI — the prompt is also auto-skipped when stdin isn't a TTY):
 
 ```sh
 uv run aws-token-vending-machine creds \
@@ -140,7 +146,7 @@ aws-token-vending-machine creds
   --region               default: eu-west-1
   --duration-seconds     default: 7200
   --output               default: experiments-env
-  -i / --interactive     pick SSH host and remote folder via prompts
+  --no-remote            skip the interactive remote-host/folder picker
   --remote-host          optional SSH host (skips interactive picker)
   --remote-path          optional remote env path
   --mfa-serial           optional, main target only

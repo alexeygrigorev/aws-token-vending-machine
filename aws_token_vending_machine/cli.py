@@ -39,10 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
     creds.add_argument("--remote-host", default=None)
     creds.add_argument("--remote-path", default=None)
     creds.add_argument(
-        "-i",
-        "--interactive",
+        "--no-remote",
         action="store_true",
-        help="Interactively pick an SSH host (from ~/.ssh/config) and browse remote directories to drop a .env file. Ignored if --remote-host is provided.",
+        help="Skip the interactive SSH-host + remote-folder picker; only write the local env file.",
     )
     creds.add_argument("--mfa-serial", default=env("AWS_EXPERIMENTS_MFA_SERIAL", None) or None)
     creds.add_argument("--mfa-code", default=None)
@@ -79,7 +78,12 @@ def run_creds(args: argparse.Namespace) -> int:
     remote_host = args.remote_host
     remote_path = args.remote_path
 
-    if args.interactive and not remote_host:
+    should_prompt = (
+        not args.no_remote
+        and not remote_host
+        and sys.stdin.isatty()
+    )
+    if should_prompt:
         from aws_token_vending_machine.interactive import prompt_remote_target
 
         ssh_client, remote_host, remote_path = prompt_remote_target()
