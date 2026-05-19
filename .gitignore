@@ -1,0 +1,27 @@
+# Secrets and generated credentials — never commit these.
+.env
+.env.local
+experiments-env
+*-env
+initial-admin-credentials.txt
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.python-version
+
+# Build / packaging
+build/
+dist/
+*.whl
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
