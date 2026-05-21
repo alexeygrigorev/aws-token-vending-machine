@@ -88,19 +88,6 @@ uv run aws-sandbox-cli creds --target main
 
 This calls `sts:GetSessionToken` on your current credentials, returning short-lived credentials for the same (management) account.
 
-If your IAM user has an MFA policy attached (a common pattern is to require MFA for any non-trivial action), `GetSessionToken` will fail without an MFA challenge. In that case pass:
-
-- `--mfa-serial` — the ARN of your MFA device. You can find it in the IAM console under your user (Security credentials → Multi-factor authentication), or via `aws iam list-mfa-devices --user-name <you>`. For a virtual MFA device it looks like `arn:aws:iam::<main-account-id>:mfa/<your-user>`; for a hardware key it's a different ARN format. You can also set it once in `.env` as `AWS_EXPERIMENTS_MFA_SERIAL` so you don't have to pass it every time.
-- `--mfa-code` — the 6-digit one-time code currently shown by your MFA app (Authy, 1Password, Google Authenticator, YubiKey, etc.). It must be the live code, not a previously-used one — `GetSessionToken` rejects already-consumed codes.
-
-```sh
-uv run aws-sandbox-cli creds --target main \
-  --mfa-serial arn:aws:iam::<main-account-id>:mfa/<your-user> \
-  --mfa-code 123456
-```
-
-The returned session credentials then satisfy MFA for the rest of their lifetime (`--duration-seconds`, default 2 hours), so you only enter the code once per session.
-
 ### Push credentials to a remote host over SSH
 
 By default, `creds` prompts you interactively for where to push the env file:
@@ -164,8 +151,6 @@ aws-sandbox-cli creds
   --no-remote            skip the interactive remote-host/folder picker
   --remote-host          optional SSH host (skips interactive picker)
   --remote-path          optional remote env path
-  --mfa-serial           optional, main target only
-  --mfa-code             required when --mfa-serial is set
 ```
 
 ## Layout

@@ -43,8 +43,6 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip the interactive SSH-host + remote-folder picker; only write the local env file.",
     )
-    creds.add_argument("--mfa-serial", default=env("AWS_EXPERIMENTS_MFA_SERIAL", None) or None)
-    creds.add_argument("--mfa-code", default=None)
 
     setup = subparsers.add_parser(
         "setup-sandbox",
@@ -95,8 +93,6 @@ def run_creds(args: argparse.Namespace) -> int:
         output=pathlib.Path(args.output),
         remote_host=remote_host,
         remote_path=remote_path,
-        mfa_serial=args.mfa_serial,
-        mfa_code=args.mfa_code,
     )
     try:
         expiration = write_credentials(request, ssh_client=ssh_client)

@@ -32,8 +32,6 @@ class CredentialsRequest:
     output: pathlib.Path
     remote_host: str | None
     remote_path: str | None
-    mfa_serial: str | None
-    mfa_code: str | None
 
 
 def fetch_sandbox_credentials(request: CredentialsRequest) -> tuple[dict[str, str], str]:
@@ -66,14 +64,7 @@ def fetch_sandbox_credentials(request: CredentialsRequest) -> tuple[dict[str, st
 
 def fetch_main_credentials(request: CredentialsRequest) -> tuple[dict[str, str], str]:
     sts = boto3.client("sts")
-    kwargs: dict = {"DurationSeconds": request.duration_seconds}
-    if request.mfa_serial:
-        kwargs["SerialNumber"] = request.mfa_serial
-        if not request.mfa_code:
-            raise SystemExit("--mfa-code is required when --mfa-serial is set")
-        kwargs["TokenCode"] = request.mfa_code
-
-    response = sts.get_session_token(**kwargs)
+    response = sts.get_session_token(DurationSeconds=request.duration_seconds)
     creds = response["Credentials"]
     expiration = creds["Expiration"].isoformat()
     account_id = sts.get_caller_identity()["Account"]
