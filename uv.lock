@@ -2,8 +2,12 @@ version = 1
 revision = 3
 requires-python = ">=3.13"
 
+[options]
+exclude-newer = "2026-05-14T13:45:19.225096313Z"
+exclude-newer-span = "P7D"
+
 [[package]]
-name = "aws-token-vending-machine"
+name = "aws-sandbox-cli"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

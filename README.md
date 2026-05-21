@@ -1,6 +1,8 @@
-# aws-token-vending-machine
+# aws-sandbox-cli
 
-Create AWS Organizations sandbox accounts and mint temporary AWS credentials with one command.
+Personal CLI for working out of an AWS Organizations sandbox account: create the sandbox once, then mint short-lived credentials whenever you need them.
+
+> **Not the same as [aws-workshop-credentials](https://github.com/alexeygrigorev/aws-workshop-credentials).** That one is a Lambda service that vends credentials to many workshop participants over HTTP. This one is a local CLI for your own daily work.
 
 It does two things:
 
@@ -9,15 +11,15 @@ It does two things:
 
 ## Why
 
-Working from long-term root or admin keys is risky. This tool keeps a single configured "vending machine" so each session uses short-lived credentials in an isolated sandbox account, while the management account stays mostly unused.
+Working from long-term root or admin keys is risky. This tool keeps a single configured CLI so each session uses short-lived credentials in an isolated sandbox account, while the management account stays mostly unused.
 
 ## Install
 
 Requires Python 3.13+ and AWS credentials configured for your management (main) account.
 
 ```sh
-git clone https://github.com/<you>/aws-token-vending-machine.git
-cd aws-token-vending-machine
+git clone https://github.com/alexeygrigorev/aws-sandbox-cli.git
+cd aws-sandbox-cli
 uv sync
 ```
 
@@ -26,6 +28,8 @@ Or install as a tool:
 ```sh
 uv tool install .
 ```
+
+This installs two console scripts: `aws-sandbox-cli` and the short alias `asc`.
 
 ## Configure
 
@@ -54,7 +58,7 @@ Or call the CLI directly:
 ### Mint sandbox credentials (default)
 
 ```sh
-uv run aws-token-vending-machine creds
+uv run aws-sandbox-cli creds
 ```
 
 This calls `sts:AssumeRole` into the sandbox `OrganizationAccountAccessRole` and writes an env file (default: `experiments-env`):
@@ -79,7 +83,7 @@ aws sts get-caller-identity
 ### Mint main-account credentials
 
 ```sh
-uv run aws-token-vending-machine creds --target main
+uv run aws-sandbox-cli creds --target main
 ```
 
 This calls `sts:GetSessionToken` on your current credentials, returning short-lived credentials for the same (management) account.
@@ -90,7 +94,7 @@ If your IAM user has an MFA policy attached (a common pattern is to require MFA 
 - `--mfa-code` — the 6-digit one-time code currently shown by your MFA app (Authy, 1Password, Google Authenticator, YubiKey, etc.). It must be the live code, not a previously-used one — `GetSessionToken` rejects already-consumed codes.
 
 ```sh
-uv run aws-token-vending-machine creds --target main \
+uv run aws-sandbox-cli creds --target main \
   --mfa-serial arn:aws:iam::<main-account-id>:mfa/<your-user> \
   --mfa-code 123456
 ```
@@ -102,7 +106,7 @@ The returned session credentials then satisfy MFA for the rest of their lifetime
 By default, `creds` prompts you interactively for where to push the env file:
 
 ```sh
-uv run aws-token-vending-machine creds
+uv run aws-sandbox-cli creds
 ```
 
 You'll be prompted to:
@@ -115,13 +119,13 @@ The file is always named `.env` in the folder you pick. Existing AWS keys are up
 To skip the prompt and only write the local env file:
 
 ```sh
-uv run aws-token-vending-machine creds --no-remote
+uv run aws-sandbox-cli creds --no-remote
 ```
 
 Non-interactive remote (for scripts and CI — the prompt is also auto-skipped when stdin isn't a TTY):
 
 ```sh
-uv run aws-token-vending-machine creds \
+uv run aws-sandbox-cli creds \
   --remote-host <ssh-host> \
   --remote-path '~/tmp/lambda-deploy/.env'
 ```
@@ -129,19 +133,19 @@ uv run aws-token-vending-machine creds \
 ### Create or verify the sandbox account
 
 ```sh
-uv run aws-token-vending-machine setup-sandbox
+uv run aws-sandbox-cli setup-sandbox
 ```
 
 This is idempotent: it finds-or-creates the OU, finds-or-creates the member account, ensures it lives in the right OU, attaches `AdministratorAccess`, and creates a login profile if missing. To rotate the admin password:
 
 ```sh
-uv run aws-token-vending-machine setup-sandbox --admin-password '<new>' --rotate-password
+uv run aws-sandbox-cli setup-sandbox --admin-password '<new>' --rotate-password
 ```
 
 ## CLI reference
 
 ```text
-aws-token-vending-machine setup-sandbox
+aws-sandbox-cli setup-sandbox
   --account-email        default: $AWS_EXPERIMENTS_ACCOUNT_EMAIL
   --account-name         default: experiments
   --ou-name              default: Experiments
@@ -152,7 +156,7 @@ aws-token-vending-machine setup-sandbox
   --rotate-password      rotate even if a login profile exists
   --max-session-duration default: 7200
 
-aws-token-vending-machine creds
+aws-sandbox-cli creds
   --target               sandbox | main   (default: sandbox)
   --region               default: eu-west-1
   --duration-seconds     default: 7200
@@ -167,8 +171,8 @@ aws-token-vending-machine creds
 ## Layout
 
 ```text
-aws_token_vending_machine/
-  __main__.py       python -m aws_token_vending_machine
+aws_sandbox_cli/
+  __main__.py       python -m aws_sandbox_cli
   cli.py            argparse entry point
   config.py         load AWS_EXPERIMENTS_* from .env
   credentials.py    AssumeRole (sandbox) / GetSessionToken (main)

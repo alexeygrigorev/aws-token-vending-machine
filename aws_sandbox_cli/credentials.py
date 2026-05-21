@@ -7,9 +7,9 @@ from typing import Literal
 
 import boto3
 
-from aws_token_vending_machine.config import env, require_env
-from aws_token_vending_machine.env_file import update_env_file
-from aws_token_vending_machine.remote import (
+from aws_sandbox_cli.config import env, require_env
+from aws_sandbox_cli.env_file import update_env_file
+from aws_sandbox_cli.remote import (
     update_remote_env_file,
     verify_remote,
     write_remote_env_via_sftp,

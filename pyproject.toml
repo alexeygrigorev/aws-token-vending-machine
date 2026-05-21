@@ -1,5 +1,5 @@
 [project]
-name = "aws-token-vending-machine"
+name = "aws-sandbox-cli"
 version = "0.1.0"
 description = "Create AWS Organizations sandbox accounts and mint temporary credentials with one command."
 readme = "README.md"
@@ -12,12 +12,12 @@ dependencies = [
 ]
 
 [project.scripts]
-aws-token-vending-machine = "aws_token_vending_machine.cli:main"
-avtm = "aws_token_vending_machine.cli:main"
+aws-sandbox-cli = "aws_sandbox_cli.cli:main"
+asc = "aws_sandbox_cli.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aws_token_vending_machine"]
+packages = ["aws_sandbox_cli"]

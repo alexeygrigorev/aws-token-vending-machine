@@ -1,4 +1,4 @@
-from aws_token_vending_machine.cli import main
+from aws_sandbox_cli.cli import main
 
 
 if __name__ == "__main__":

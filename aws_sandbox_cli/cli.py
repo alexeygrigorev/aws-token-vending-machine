@@ -5,20 +5,20 @@ import argparse
 import pathlib
 import sys
 
-from aws_token_vending_machine.config import env, load_experiments_config
-from aws_token_vending_machine.credentials import (
+from aws_sandbox_cli.config import env, load_experiments_config
+from aws_sandbox_cli.credentials import (
     DEFAULT_DURATION_SECONDS,
     DEFAULT_OUTPUT_FILE,
     DEFAULT_REGION,
     CredentialsRequest,
     write_credentials,
 )
-from aws_token_vending_machine.setup import ADMIN_POLICY_ARN, SetupConfig, run_setup
+from aws_sandbox_cli.setup import ADMIN_POLICY_ARN, SetupConfig, run_setup
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="aws-token-vending-machine",
+        prog="aws-sandbox-cli",
         description="Create AWS Organizations sandbox accounts and mint temporary credentials.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -84,7 +84,7 @@ def run_creds(args: argparse.Namespace) -> int:
         and sys.stdin.isatty()
     )
     if should_prompt:
-        from aws_token_vending_machine.interactive import prompt_remote_target
+        from aws_sandbox_cli.interactive import prompt_remote_target
 
         ssh_client, remote_host, remote_path = prompt_remote_target()
 

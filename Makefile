@@ -14,13 +14,13 @@ install:
 	uv sync
 
 creds:
-	uv run aws-token-vending-machine creds
+	uv run aws-sandbox-cli creds
 
 creds-local:
-	uv run aws-token-vending-machine creds --no-remote
+	uv run aws-sandbox-cli creds --no-remote
 
 creds-main:
-	uv run aws-token-vending-machine creds --target main
+	uv run aws-sandbox-cli creds --target main
 
 setup-sandbox:
-	uv run aws-token-vending-machine setup-sandbox
+	uv run aws-sandbox-cli setup-sandbox

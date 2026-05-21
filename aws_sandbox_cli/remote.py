@@ -5,7 +5,7 @@ import json
 import shlex
 import subprocess
 
-from aws_token_vending_machine.env_file import update_env_lines
+from aws_sandbox_cli.env_file import update_env_lines
 
 
 REMOTE_UPDATE_SCRIPT = r"""
